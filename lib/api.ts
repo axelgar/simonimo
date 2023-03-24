@@ -26,32 +26,48 @@ content {
     }
   }
 }
-`
+`;
+
+const PROJECT_GRAPHQL_FIELDS = `
+slug
+title
+description {
+  json
+}
+imagesCollection {
+  items {
+    title
+    url
+  }
+}
+projectCategory {
+  name
+}
+`;
 
 async function fetchGraphQL(query, preview = false) {
-  return fetch(
-    `https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${
-          preview
-            ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN
-            : process.env.CONTENTFUL_ACCESS_TOKEN
-        }`,
-      },
-      body: JSON.stringify({ query }),
-    }
-  ).then((response) => response.json())
+  return fetch(`https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${
+        preview ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN : process.env.CONTENTFUL_ACCESS_TOKEN
+      }`,
+    },
+    body: JSON.stringify({ query }),
+  }).then((response) => response.json());
 }
 
 function extractPost(fetchResponse) {
-  return fetchResponse?.data?.postCollection?.items?.[0]
+  return fetchResponse?.data?.postCollection?.items?.[0];
 }
 
 function extractPostEntries(fetchResponse) {
-  return fetchResponse?.data?.postCollection?.items
+  return fetchResponse?.data?.postCollection?.items;
+}
+
+function extractProjectEntries(fetchResponse) {
+  return fetchResponse?.data?.projectCollection?.items;
 }
 
 export async function getPreviewPostBySlug(slug) {
@@ -64,8 +80,8 @@ export async function getPreviewPostBySlug(slug) {
       }
     }`,
     true
-  )
-  return extractPost(entry)
+  );
+  return extractPost(entry);
 }
 
 export async function getAllPostsWithSlug() {
@@ -77,8 +93,8 @@ export async function getAllPostsWithSlug() {
         }
       }
     }`
-  )
-  return extractPostEntries(entries)
+  );
+  return extractPostEntries(entries);
 }
 
 export async function getAllPostsForHome(preview) {
@@ -91,23 +107,35 @@ export async function getAllPostsForHome(preview) {
       }
     }`,
     preview
-  )
-  return extractPostEntries(entries)
+  );
+  return extractPostEntries(entries);
+}
+
+export async function getAllProjects(preview) {
+  const entries = await fetchGraphQL(
+    `query {
+      projectCollection(preview: ${preview ? 'true' : 'false'}) {
+        items {
+          ${PROJECT_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+    preview
+  );
+  return extractProjectEntries(entries);
 }
 
 export async function getPostAndMorePosts(slug, preview) {
   const entry = await fetchGraphQL(
     `query {
-      postCollection(where: { slug: "${slug}" }, preview: ${
-      preview ? 'true' : 'false'
-    }, limit: 1) {
+      postCollection(where: { slug: "${slug}" }, preview: ${preview ? 'true' : 'false'}, limit: 1) {
         items {
           ${POST_GRAPHQL_FIELDS}
         }
       }
     }`,
     preview
-  )
+  );
   const entries = await fetchGraphQL(
     `query {
       postCollection(where: { slug_not_in: "${slug}" }, order: date_DESC, preview: ${
@@ -119,9 +147,9 @@ export async function getPostAndMorePosts(slug, preview) {
       }
     }`,
     preview
-  )
+  );
   return {
     post: extractPost(entry),
     morePosts: extractPostEntries(entries),
-  }
+  };
 }
