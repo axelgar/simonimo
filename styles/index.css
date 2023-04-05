@@ -56,4 +56,5 @@
 body {
   font-family: 'NeueHaas';
   background-color: #fffded;
+  cursor: url('../public/fire.png') 26 23, auto;
 }
