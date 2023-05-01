@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { HomeCarousel } from './HomeCarousel';
 import { HomeLink } from './HomeLink';
 
-export default function Intro() {
+export default function Intro({ projects }) {
   return (
     <section className="flex-col flex items-center md:justify-between mt-32 mb-16 md:mb-12">
       <img src="/logosimonimo.png" width={330} className="block" />
@@ -24,7 +24,12 @@ export default function Intro() {
 
       <div className="sm:flex w-full gap-3 mt-12">
         <HomeCarousel images={['/logosimonimo.png', '/logosimonimo.png', '/logosimonimo.png']} />
-        <HomeCarousel images={['/logosimonimo.png', '/logosimonimo.png', '/logosimonimo.png']} />
+        {/* <HomeCarousel images={['/logosimonimo.png', '/logosimonimo.png', '/logosimonimo.png']} /> */}
+        {projects &&
+          projects.length &&
+          projects.map((project) => (
+            <HomeCarousel link={project.slug} images={project.imagesCollection.items.map((image) => image.url)} />
+          ))}
       </div>
 
       <div className="mt-8">

@@ -31,6 +31,7 @@ content {
 const PROJECT_GRAPHQL_FIELDS = `
 slug
 title
+promoted
 description {
   json
 }
@@ -60,6 +61,9 @@ async function fetchGraphQL(query, preview = false) {
 
 function extractPost(fetchResponse) {
   return fetchResponse?.data?.postCollection?.items?.[0];
+}
+function extractProject(fetchResponse) {
+  return fetchResponse?.data?.projectCollection?.items?.[0];
 }
 
 function extractPostEntries(fetchResponse) {
@@ -122,6 +126,50 @@ export async function getAllProjects(preview) {
     }`,
     preview
   );
+  return extractProjectEntries(entries);
+}
+
+export async function getProjectAndMoreProjects(slug, preview) {
+  const entry = await fetchGraphQL(
+    `query {
+      projectCollection(where: { slug: "${slug}" }, preview: ${preview ? 'true' : 'false'}, limit: 1) {
+        items {
+          ${PROJECT_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+    preview
+  );
+  const entries = await fetchGraphQL(
+    `query {
+      projectCollection(where: { slug_not_in: "${slug}" }, order: date_DESC, preview: ${
+      preview ? 'true' : 'false'
+    }, limit: 2) {
+        items {
+          ${PROJECT_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+    preview
+  );
+  return {
+    project: extractProject(entry),
+    moreProjects: extractProjectEntries(entries),
+  };
+}
+
+export async function getPromotedProjects(preview) {
+  const entries = await fetchGraphQL(
+    `query {
+      projectCollection(where: { promoted: ${true} }, preview: ${preview ? 'true' : 'false'}) {
+        items {
+          ${PROJECT_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+    preview
+  );
+
   return extractProjectEntries(entries);
 }
 
